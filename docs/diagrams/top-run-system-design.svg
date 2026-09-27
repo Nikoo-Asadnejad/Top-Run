@@ -1,0 +1,223 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1000" viewBox="0 0 1800 1000" role="img" aria-labelledby="title desc">
+  <title id="title">Top Run technical system design</title>
+  <desc id="desc">Technical component diagram showing the Game Client, Game API and Top Run API on the same API layer, Location Resolver API, RabbitMQ, Top Run Consumer, separate Redis data stores, PostgreSQL, and SignalR. The leaderboard is updated only when a completed round has a better score.</desc>
+
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f8fafc"/>
+      <stop offset="1" stop-color="#eef2ff"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="7" stdDeviation="10" flood-color="#0f172a" flood-opacity="0.09"/>
+    </filter>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="strokeWidth">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#475569"/>
+    </marker>
+    <marker id="arrow-read" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="strokeWidth">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#64748b"/>
+    </marker>
+    <marker id="arrow-live" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="strokeWidth">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#4f46e5"/>
+    </marker>
+    <style>
+      .heading { font: 600 30px Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #0f172a; }
+      .subheading { font: 400 15px Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #64748b; }
+      .layer { font: 600 11px Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; letter-spacing: 1.6px; fill: #64748b; }
+      .node-title { font: 600 18px Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #0f172a; }
+      .node-copy { font: 400 13px Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #475569; }
+      .node-mono { font: 500 12px ui-monospace, SFMono-Regular, Menlo, monospace; fill: #475569; }
+      .edge-label { font: 500 12px Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #334155; }
+      .badge { font: 600 11px Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #6d28d9; }
+      .service { fill: #ffffff; stroke: #94a3b8; stroke-width: 1.5; filter: url(#shadow); }
+      .api { fill: #ffffff; stroke: #22d3ee; stroke-width: 1.7; filter: url(#shadow); }
+      .consumer { fill: #ffffff; stroke: #a78bfa; stroke-width: 1.7; filter: url(#shadow); }
+      .write { fill: none; stroke: #475569; stroke-width: 2.2; marker-end: url(#arrow); }
+      .read { fill: none; stroke: #64748b; stroke-width: 2; stroke-dasharray: 6 6; marker-end: url(#arrow-read); }
+      .live { fill: none; stroke: #4f46e5; stroke-width: 2.4; stroke-dasharray: 9 7; marker-end: url(#arrow-live); }
+      .label-bg { fill: #f8fafc; opacity: 0.96; }
+    </style>
+  </defs>
+
+  <rect width="1800" height="1000" rx="28" fill="url(#bg)"/>
+  <text x="64" y="64" class="heading">Top Run — technical component flow</text>
+  <text x="64" y="92" class="subheading">Country-aware round ingestion, asynchronous best-score projection, and live leaderboard refresh</text>
+
+  <!-- Layer guides -->
+  <text x="64" y="163" class="layer">GAME CLIENT</text>
+  <line x1="170" y1="159" x2="1736" y2="159" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="64" y="305" class="layer">API LAYER</text>
+  <line x1="150" y1="301" x2="1736" y2="301" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="64" y="525" class="layer">PROCESSING</text>
+  <line x1="166" y1="521" x2="1736" y2="521" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="64" y="756" class="layer">DATA STORES</text>
+  <line x1="170" y1="752" x2="1736" y2="752" stroke="#cbd5e1" stroke-width="1"/>
+
+  <!-- Connections are behind components -->
+  <path class="write" d="M830 230 C770 245 680 260 590 300"/>
+  <path class="read" d="M970 230 C1030 245 1120 260 1210 300"/>
+  <path class="write" d="M450 355 H405 V575 H380"/>
+  <path class="write" d="M240 630 V735"/>
+  <path class="write" d="M590 410 V500"/>
+  <path class="write" d="M500 410 H415 V688 H830 V735"/>
+  <path class="write" d="M730 565 H800"/>
+  <path class="write" d="M900 630 V735"/>
+  <path class="write" d="M1050 630 C1115 660 1190 690 1265 735"/>
+  <path class="write" d="M1100 555 H1410 V355 H1470"/>
+  <path class="read" d="M1275 410 V455 H1430 V690 H1325 V735"/>
+  <path class="live" d="M1595 300 V185 H1020"/>
+
+  <!-- Edge labels with clear backgrounds -->
+  <g>
+    <rect class="label-bg" x="670" y="240" width="96" height="26" rx="6"/>
+    <text x="718" y="258" text-anchor="middle" class="edge-label">Finish round</text>
+  </g>
+  <g>
+    <rect class="label-bg" x="1030" y="240" width="116" height="26" rx="6"/>
+    <text x="1088" y="258" text-anchor="middle" class="edge-label">Get leaderboard</text>
+  </g>
+  <g>
+    <rect class="label-bg" x="326" y="444" width="114" height="26" rx="6"/>
+    <text x="383" y="462" text-anchor="middle" class="edge-label">Resolve country</text>
+  </g>
+  <g>
+    <rect class="label-bg" x="252" y="676" width="104" height="26" rx="6"/>
+    <text x="304" y="694" text-anchor="middle" class="edge-label">Cache lookup</text>
+  </g>
+  <g>
+    <rect class="label-bg" x="604" y="448" width="102" height="26" rx="6"/>
+    <text x="655" y="466" text-anchor="middle" class="edge-label">Publish event</text>
+  </g>
+  <g>
+    <rect class="label-bg" x="482" y="672" width="126" height="26" rx="6"/>
+    <text x="545" y="690" text-anchor="middle" class="edge-label">Save GameRound</text>
+  </g>
+  <g>
+    <rect class="label-bg" x="735" y="532" width="74" height="26" rx="6"/>
+    <text x="772" y="550" text-anchor="middle" class="edge-label">Deliver</text>
+  </g>
+  <g>
+    <rect class="label-bg" x="912" y="674" width="126" height="26" rx="6"/>
+    <text x="975" y="692" text-anchor="middle" class="edge-label">Atomic compare</text>
+  </g>
+  <g>
+    <rect class="label-bg" x="1086" y="650" width="144" height="26" rx="6"/>
+    <text x="1158" y="668" text-anchor="middle" class="edge-label">ZADD GT if improved</text>
+  </g>
+  <g>
+    <rect class="label-bg" x="1190" y="527" width="158" height="26" rx="6"/>
+    <text x="1269" y="545" text-anchor="middle" class="edge-label">LeaderboardUpdated</text>
+  </g>
+  <g>
+    <rect class="label-bg" x="1340" y="675" width="86" height="26" rx="6"/>
+    <text x="1383" y="693" text-anchor="middle" class="edge-label">Read ranks</text>
+  </g>
+  <g>
+    <rect class="label-bg" x="1268" y="168" width="102" height="26" rx="6"/>
+    <text x="1319" y="186" text-anchor="middle" class="edge-label">Notify client</text>
+  </g>
+
+  <!-- Client -->
+  <g>
+    <rect class="service" x="780" y="120" width="240" height="110" rx="20"/>
+    <rect x="810" y="143" width="42" height="66" rx="7" fill="none" stroke="#4f46e5" stroke-width="2"/>
+    <line x1="824" y1="198" x2="838" y2="198" stroke="#4f46e5" stroke-width="2" stroke-linecap="round"/>
+    <text x="874" y="164" class="node-title">Game Client</text>
+    <text x="874" y="190" class="node-copy">Finish round</text>
+    <text x="874" y="211" class="node-copy">Display Top Run</text>
+  </g>
+
+  <!-- APIs aligned on the same level -->
+  <g>
+    <rect class="api" x="450" y="300" width="280" height="110" rx="18"/>
+    <rect x="450" y="300" width="8" height="110" rx="4" fill="#0891b2"/>
+    <text x="480" y="341" class="node-title">Game API</text>
+    <text x="480" y="368" class="node-copy">Save round</text>
+    <text x="480" y="389" class="node-copy">Publish GameRoundFinished</text>
+  </g>
+  <g>
+    <rect class="api" x="1070" y="300" width="280" height="110" rx="18"/>
+    <rect x="1070" y="300" width="8" height="110" rx="4" fill="#0891b2"/>
+    <text x="1100" y="341" class="node-title">Top Run API</text>
+    <text x="1100" y="368" class="node-copy">Read ranked page</text>
+    <text x="1100" y="389" class="node-copy">Return current player place</text>
+  </g>
+
+  <!-- Processing components -->
+  <g>
+    <rect class="service" x="100" y="520" width="280" height="110" rx="18"/>
+    <rect x="100" y="520" width="8" height="110" rx="4" fill="#0891b2"/>
+    <text x="130" y="561" class="node-title">Location Resolver API</text>
+    <text x="130" y="588" class="node-copy">Request context → CountryId</text>
+    <text x="130" y="609" class="node-copy">Uses an isolated location cache</text>
+  </g>
+
+  <g>
+    <path d="M475 500 H705 L730 565 L705 630 H475 L450 565 Z" fill="#ffffff" stroke="#fb923c" stroke-width="1.8" filter="url(#shadow)"/>
+    <text x="490" y="542" class="node-title">RabbitMQ</text>
+    <text x="490" y="566" class="node-copy">GameRoundFinished</text>
+    <g transform="translate(620 528)">
+      <rect x="0" y="0" width="58" height="10" rx="5" fill="#ffedd5" stroke="#f97316"/>
+      <rect x="0" y="20" width="58" height="10" rx="5" fill="#ffedd5" stroke="#f97316"/>
+      <rect x="0" y="40" width="58" height="10" rx="5" fill="#ffedd5" stroke="#f97316"/>
+      <circle cx="49" cy="5" r="3" fill="#f97316"/>
+      <circle cx="49" cy="25" r="3" fill="#f97316"/>
+      <circle cx="49" cy="45" r="3" fill="#f97316"/>
+    </g>
+  </g>
+
+  <g>
+    <rect class="consumer" x="800" y="500" width="300" height="130" rx="18"/>
+    <rect x="800" y="500" width="8" height="130" rx="4" fill="#7c3aed"/>
+    <text x="830" y="541" class="node-title">Top Run Consumer</text>
+    <text x="830" y="568" class="node-copy">Atomic best-score update</text>
+    <rect x="830" y="585" width="190" height="26" rx="13" fill="#f3e8ff"/>
+    <text x="925" y="603" text-anchor="middle" class="badge">IF NEW SCORE &gt; BEST SCORE</text>
+  </g>
+
+  <g>
+    <rect class="service" x="1470" y="300" width="250" height="110" rx="18"/>
+    <rect x="1470" y="300" width="8" height="110" rx="4" fill="#16a34a"/>
+    <text x="1500" y="341" class="node-title">SignalR</text>
+    <text x="1500" y="368" class="node-copy">LeaderboardUpdated</text>
+    <path d="M1664 338 q18 17 0 34 M1652 345 q10 10 0 20" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="1641" cy="355" r="4" fill="#16a34a"/>
+  </g>
+
+  <!-- Technical database components -->
+  <g filter="url(#shadow)">
+    <path d="M100 762 C100 744 163 732 240 732 C317 732 380 744 380 762 V842 C380 860 317 872 240 872 C163 872 100 860 100 842 Z" fill="#ffffff" stroke="#60a5fa" stroke-width="1.7"/>
+    <ellipse cx="240" cy="762" rx="140" ry="30" fill="#dbeafe" stroke="#60a5fa" stroke-width="1.7"/>
+    <path d="M100 802 C100 820 163 832 240 832 C317 832 380 820 380 802" fill="none" stroke="#bfdbfe" stroke-width="1.4"/>
+    <text x="240" y="765" text-anchor="middle" class="node-title">Redis</text>
+    <text x="240" y="804" text-anchor="middle" class="node-copy">Location cache</text>
+    <text x="240" y="828" text-anchor="middle" class="node-mono">hashed IP → CountryId</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <path d="M720 762 C720 744 787 732 870 732 C953 732 1020 744 1020 762 V842 C1020 860 953 872 870 872 C787 872 720 860 720 842 Z" fill="#ffffff" stroke="#64748b" stroke-width="1.7"/>
+    <ellipse cx="870" cy="762" rx="150" ry="30" fill="#e2e8f0" stroke="#64748b" stroke-width="1.7"/>
+    <path d="M720 802 C720 820 787 832 870 832 C953 832 1020 820 1020 802" fill="none" stroke="#cbd5e1" stroke-width="1.4"/>
+    <text x="870" y="765" text-anchor="middle" class="node-title">PostgreSQL</text>
+    <text x="870" y="804" text-anchor="middle" class="node-copy">GameRound + LeaderboardEntry</text>
+    <text x="870" y="828" text-anchor="middle" class="node-mono">durable source of truth</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <path d="M1120 762 C1120 744 1187 732 1270 732 C1353 732 1420 744 1420 762 V842 C1420 860 1353 872 1270 872 C1187 872 1120 860 1120 842 Z" fill="#ffffff" stroke="#60a5fa" stroke-width="1.7"/>
+    <ellipse cx="1270" cy="762" rx="150" ry="30" fill="#dbeafe" stroke="#60a5fa" stroke-width="1.7"/>
+    <path d="M1120 802 C1120 820 1187 832 1270 832 C1353 832 1420 820 1420 802" fill="none" stroke="#bfdbfe" stroke-width="1.4"/>
+    <text x="1270" y="765" text-anchor="middle" class="node-title">Redis</text>
+    <text x="1270" y="804" text-anchor="middle" class="node-copy">Leaderboard Sorted Sets</text>
+    <text x="1270" y="828" text-anchor="middle" class="node-mono">PlayerId → BestScore</text>
+  </g>
+
+  <!-- Legend -->
+  <g transform="translate(64 936)">
+    <line x1="0" y1="0" x2="46" y2="0" class="write"/>
+    <text x="62" y="5" class="edge-label">Write or event flow</text>
+    <line x1="220" y1="0" x2="266" y2="0" class="read"/>
+    <text x="282" y="5" class="edge-label">Read flow</text>
+    <line x1="390" y1="0" x2="436" y2="0" class="live"/>
+    <text x="452" y="5" class="edge-label">Live notification</text>
+  </g>
+</svg>
